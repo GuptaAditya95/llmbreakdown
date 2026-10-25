@@ -107,6 +107,7 @@ p{margin:0}
 .cover-text{display:flex;flex-direction:column;gap:22px}
 .parts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .part{position:relative;background:var(--card);border:1.5px solid var(--card-edge);padding:20px 20px 18px;border-radius:4px;box-shadow:0 2px 0 var(--card-edge);display:flex;flex-direction:column;gap:10px}
+.part.wide{grid-column:1/-1}
 .part .num{font-family:var(--font-hand);font-size:2.6rem;line-height:1;color:var(--pencil)}
 .part.soon{opacity:.7}
 .part.soon .stamp{position:absolute;top:14px;right:12px;font-family:var(--font-note);border:2px solid rgb(var(--pos-rgb));color:rgb(var(--pos-rgb));padding:0 .5em;transform:rotate(8deg);border-radius:4px;font-size:.95rem}
@@ -358,7 +359,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
 @media (max-width: 560px){
   .parts{grid-template-columns:minmax(0,1fr)}
   .compare{grid-template-columns:minmax(0,1fr)}
-  .enc-head .ttl,#shapeName,#shapeNameD{display:none}
+  .enc-head .ttl,#shapeName,#shapeNameD,#shapeNameI{display:none}
   .dots{gap:3px}
   .dots button{width:9px;height:9px;border-width:1.5px}
   .enc-head .wrap{gap:6px 12px}
@@ -416,7 +417,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
         <p class="cover-kicker"><a href="../" style="color:inherit">Let's break it down</a> · An interactive notebook on Vaswani et al. (2017)</p>
         <h1>Attention, <span class="under">by hand<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 14 C 40 4, 90 18, 130 9 S 185 6, 198 12" fill="none" stroke="rgb(var(--pos-rgb))" stroke-width="5" stroke-linecap="round"/></svg></span></h1>
         <p class="lede">This is a hands-on walkthrough of the Transformer from <em>Attention Is All You Need</em>, the 2017 paper by researchers at Google Brain, Google Research and the University of Toronto. You type a sentence, and every number the model computes is worked out in front of you, step by step, with the matrix shapes written next to it. Then you do the same sums yourself.</p>
-        <p>The model has two halves. We go through them one at a time, starting with the encoder.</p>
+        <p>The model has two halves. We go through them one at a time, starting with the encoder, and then put the trained model to work translating a new sentence.</p>
         <div class="parts">
           <div class="part">
             <span class="num">Part 1</span>
@@ -429,6 +430,12 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
             <h3>The decoder</h3>
             <p>Masked self-attention, encoder–decoder attention and how the model produces a translation one word at a time.</p>
             <a class="btn big" href="#decoder">Enter <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="part wide">
+            <span class="num">Part 3</span>
+            <h3>Inference</h3>
+            <p>How the finished model actually translates: encode once, then predict, pick and feed back one word at a time until ⟨/s⟩. Plus the two tricks every real system uses, the KV cache and beam search.</p>
+            <a class="btn big" href="#inference">Enter <span aria-hidden="true">→</span></a>
           </div>
         </div>
       </div>
@@ -510,7 +517,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
             <text x="410" y="26" font-size="20" text-anchor="middle">Output Probabilities</text>
           </a>
         </svg>
-        <figcaption class="note" style="text-align:center;padding:4px 8px 6px">Redrawn by hand from Figure 1 of Vaswani et al. (2017). The encoder (left) is Part 1 and the decoder (right) is Part 2.</figcaption>
+        <figcaption class="note" style="text-align:center;padding:4px 8px 6px">Redrawn by hand from Figure 1 of Vaswani et al. (2017). The encoder (left) is Part 1 and the decoder (right) is Part 2. Part 3 runs them together to translate.</figcaption>
       </figure>
     </div>
 
@@ -1167,7 +1174,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
           <div class="eyebrow"><span class="stepno">20</span><h3>Translating: one word at a time</h3></div>
           <p>When translating new text there is no German sentence to feed in. The encoder runs once. Then the decoder starts from ⟨s⟩ alone, predicts a word, appends it to its own input and runs again, until it predicts ⟨/s⟩.</p>
           <p>Step through it on the card. Only the <b>last row</b>'s prediction is used at each step. And because of the mask, every earlier row comes out exactly as it did on the step before, so real implementations keep those rows' keys and values instead of recomputing them (a “KV cache”).</p>
-          <div class="why"><span class="label">Greedy or beam search?</span>The card always takes the most likely word. The paper instead keeps the 4 best partial translations at each step (beam search with a length penalty of α = 0.6) and stops at the source length + 50 <span class="sec-ref">§6.1</span>.</div>
+          <div class="why"><span class="label">Greedy or beam search?</span>The card always takes the most likely word. The paper instead keeps the 4 best partial translations at each step (beam search with a length penalty of α = 0.6) and stops at the source length + 50 <span class="sec-ref">§6.1</span>. <a href="#inference">Part 3</a> slows this loop down, step by step, and builds both the KV cache and beam search.</div>
           <div class="shape-note" data-tpl>At step t: self-attention scores <span class="mono run">t × t</span>, cross-attention scores <span class="mono run">t × {n}</span>, and only the last of the t rows of probabilities, <span class="mono run">1 × {V}</span>, is used. Z stays <span class="mono run">{n} × {d}</span> throughout.</div>
         </div>
         <div class="viz"><div class="card tape"><div id="vizDInfer"></div></div></div>
@@ -1178,6 +1185,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
           <div class="eyebrow"><span class="stepno">21</span><h3>The whole decoder</h3></div>
           <p>One row per German position went in. Out came one probability distribution per position over the whole vocabulary. During training that gives the loss; when translating, the last row gives the next word.</p>
           <p>The card lists every step and its shape. Notice which steps have n rows (the encoder's side) and which have m (the decoder's side), and that the only place they meet is cross-attention.</p>
+          <p>That's the model as it is trained. <a href="#inference">Part 3</a> puts it to work on a sentence with no translation to copy from.</p>
           <div class="homework-final">
             <span class="label">Final homework</span>
             <p>Now translate a sentence yourself. This Jupyter notebook takes “the cat sat” through one encoder layer and then “⟨s⟩ die katze saß” through one decoder layer, with d_model 4 and 2 heads. You write every matrix, from the token IDs to the probabilities of the next word, including the mask. Each one is checked as you go, with hints when an entry is off.</p>
@@ -1195,7 +1203,238 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
 
     <footer class="foot">
       <span><b>Made with Claude.</b> Built with Claude by Anthropic; the vision, structure and ideas are entirely my own.</span>
-      <span><a href="#encoder">← Part 1: the encoder</a> · <a href="#home">back to the cover</a></span>
+      <span><a href="#encoder">← Part 1: the encoder</a> · <a href="#inference">Part 3: inference →</a> · <a href="#home">back to the cover</a></span>
+    </footer>
+  </div>
+</div>
+
+<!-- ===================================================== INFERENCE ===== -->
+<div id="inference" class="page" hidden>
+  <header class="enc-head">
+    <div class="wrap">
+      <a class="back" href="#home">← cover</a>
+      <span class="ttl">Inference</span>
+      <nav class="dots" id="dotsI" aria-label="Steps"></nav>
+      <div class="shape-now" aria-live="polite"><span id="shapeNameI">Input</span><span class="mono run" id="shapeRunI">this run</span><span class="mono paperdim" id="shapePaperI">paper</span></div>
+      <div class="dimbar" id="dimbarI" aria-label="Output shape after every step"></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="intro">
+      <div>
+        <p class="label">Part 3 · Inference</p>
+        <h2>Translating a sentence nobody has translated yet</h2>
+        <p class="lede">In Part 2 the correct German sentence was handed to the decoder, and all its predictions came out of one pass. That is training. Once the model is trained, it is used on new English sentences, and <span class="hl">there is no German to hand it</span>. It has to write the translation itself, one word at a time, reading back every word it has already written.</p>
+        <p style="margin-top:12px">This part slows that loop right down. You'll encode the sentence once, start the decoder from ⟨s⟩, follow one turn of the loop row by row, run it until it stops, and then see the two tricks every real system uses: a <b>KV cache</b> so old rows are never recomputed, and <b>beam search</b> so one bad early pick doesn't ruin the sentence.</p>
+        <p class="note" style="margin-top:12px;font-size:1.1rem" data-tpl>Same model, same weights as Parts 1 and 2: your sentence (<span class="run">{n}</span> tokens), d_model <span class="run">{d}</span>, h <span class="run">{h}</span>, N <span class="run">{N}</span>. The vocabulary has <span class="run">{V}</span> entries: the words of your Part 2 translation plus ⟨/s⟩. <a href="#settings">Change the sizes in Part 1</a> or <a href="#d-target">the translation in Part 2</a> and everything here follows.</p>
+      </div>
+      <figure class="diagram-card tape" style="margin:0">
+        <svg class="fig dec-map" style="max-width:360px;margin:0 auto" viewBox="0 0 360 470" role="img" aria-labelledby="imapT imapD">
+          <title id="imapT">The inference loop</title>
+          <desc id="imapD">The encoder runs once on the English sentence and produces Z. The decoder starts from the start token, predicts a word, and the word is fed back into the decoder's input. The loop repeats until the end token.</desc>
+          <defs><marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs>
+          <a href="#i-encode"><rect class="box emb" x="14" y="300" width="120" height="58" rx="10"/><text x="74" y="326" font-size="20" text-anchor="middle">Encoder</text><text x="74" y="347" font-size="16" text-anchor="middle" fill="var(--ink-soft)">runs once</text></a>
+          <text x="74" y="430" font-size="18" text-anchor="middle">English sentence</text>
+          <path class="wire" d="M74 410 V 362" marker-end="url(#ah3)"/>
+          <a href="#i-encode"><rect class="box ffn" x="44" y="210" width="60" height="34" rx="8"/><text x="74" y="234" font-size="20" text-anchor="middle">Z</text></a>
+          <path class="wire" d="M74 300 V 248" marker-end="url(#ah3)"/>
+          <path class="wire" d="M104 227 H 176" marker-end="url(#ah3)" stroke="rgb(var(--neg-rgb))"/>
+          <text x="140" y="218" font-size="14" text-anchor="middle" fill="rgb(var(--neg-rgb))">K, V</text>
+          <a href="#i-pass"><rect class="box attn" x="180" y="196" width="150" height="62" rx="10"/><text x="255" y="222" font-size="20" text-anchor="middle">Decoder</text><text x="255" y="244" font-size="15" text-anchor="middle" fill="var(--ink-soft)">all N layers</text></a>
+          <path class="wire" d="M255 196 V 168" marker-end="url(#ah3)"/>
+          <a href="#i-last"><rect class="box" x="175" y="130" width="160" height="36" rx="8"/><text x="255" y="154" font-size="17" text-anchor="middle">last row → softmax</text></a>
+          <path class="wire" d="M255 130 V 104" marker-end="url(#ah3)"/>
+          <a href="#i-pick"><rect class="box norm" x="205" y="70" width="100" height="32" rx="8"/><text x="255" y="92" font-size="18" text-anchor="middle">pick a word</text></a>
+          <path class="wire" d="M305 86 H 345 V 330 H 270 V 262" marker-end="url(#ah3)" stroke="rgb(var(--pos-rgb))"/>
+          <a href="#i-append"><text x="300" y="352" font-size="16" text-anchor="middle" fill="rgb(var(--pos-rgb))">append it to the input</text></a>
+          <a href="#i-start"><text x="215" y="300" font-size="17" text-anchor="middle">⟨s⟩ …</text></a>
+          <path class="wire" d="M215 286 V 262" marker-end="url(#ah3)"/>
+          <a href="#i-stop"><text x="255" y="44" font-size="18" text-anchor="middle">⟨/s⟩? then stop</text></a>
+          <path class="wire" d="M255 70 V 52" marker-end="url(#ah3)"/>
+        </svg>
+        <figcaption class="note" style="text-align:center;padding:4px 8px 6px">The inference loop. Tap a box to jump to its step.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ I CHAPTER: before the loop ============ -->
+    <section class="chapter">
+      <div class="chapter-head"><span class="label">Chapter 1</span><h2>Before the loop</h2></div>
+
+      <article class="step" data-step="i-overview" data-name="Training vs. inference">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">1</span><h3>What changes when there's no answer key</h3></div>
+          <p>The model is exactly the one you built: same layers, same weights, same shapes. Only the <b>way it is used</b> changes. During training the whole correct translation goes in at once and every position is graded. During inference, also called <em>decoding</em> or <em>generation</em>, the model only has the English sentence.</p>
+          <p>So the decoder works the way you'd write a sentence by hand: write a word, read what you have so far, write the next one. The paper calls this <span class="hl">auto-regressive</span>: “consuming the previously generated symbols as additional input when generating the next” <span class="sec-ref">§3</span>.</p>
+          <div class="why"><span class="label">Plant</span>The mask from Part 2 is the reason this works. It trained every position to predict its next word while seeing only the words to its left, which is exactly the situation at inference time. Keep that in mind for step 11.</div>
+          <div class="shape-note">In: one English sentence. Out: a German sentence of a length nobody chose in advance.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIOverview"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-encode" data-name="Z (encode once)">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">2</span><h3>Encode once</h3></div>
+          <p>The English sentence is fully known, so the encoder runs <b>one time</b>, exactly as in Part 1, and produces Z. Nothing the decoder writes later changes it.</p>
+          <p data-tpl>That has a useful consequence. Every decoder layer's cross-attention turns Z into keys and values, K = Z · W<sub>K</sub> and V = Z · W<sub>V</sub>. Those don't depend on the German words either, so they can be computed once per layer and reused at every step. With {N} layers and {h} heads that's {N} × 2 small matrices, made before the first German word exists.</p>
+          <div class="shape-note" data-tpl>Z: <span class="mono run">{n} × {d}</span> · paper <span class="mono paperdim">{n} × 512</span>. Cross-attention K and V per head: <span class="mono run">{n} × {dk}</span> · paper <span class="mono paperdim">{n} × 64</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIEncode"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-start" data-name="Y0 for ⟨s⟩">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">3</span><h3>Start with ⟨s⟩</h3></div>
+          <p>The decoder needs something to read before it has written anything. That's the job of the start token ⟨s⟩, the same token that sat in front of the shifted-right translation in Part 2. The decoder's whole input is one token long.</p>
+          <p>It goes through the usual recipe: look up its embedding, multiply by √d_model, add the positional encoding for position 0 <span class="sec-ref">§3.4, §3.5</span>. At position 0 every angle is 0, so PE is just 0, 1, 0, 1, … (sin 0 = 0, cos 0 = 1).</p>
+          <div class="shape-note" data-tpl>Y0: <span class="mono run">1 × {d}</span> · paper <span class="mono paperdim">1 × 512</span>. One row, because there is one token.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIStart"></div></div></div>
+      </article>
+    </section>
+
+    <!-- ============ I CHAPTER: one turn ============ -->
+    <section class="chapter">
+      <div class="chapter-head"><span class="label">Chapter 2 · one turn of the loop</span><h2>From the words so far to the next word</h2></div>
+
+      <article class="step" data-step="i-pass" data-name="Decoder on t tokens">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">4</span><h3>Run the decoder on everything so far</h3></div>
+          <p>At turn t the decoder's input is t tokens: ⟨s⟩ and the t − 1 words it has written. They go through all N decoder layers exactly as in Part 2: masked self-attention among the German tokens, cross-attention into Z, feed-forward, add &amp; norm after each.</p>
+          <p data-tpl>Pick a turn on the card. The self-attention table is t × t and grows by one row and one column per step. The cross-attention table is t × {n}: it grows taller, but always has one column per English word.</p>
+          <div class="why"><span class="label">Notice</span>At turn 1 the only token is ⟨s⟩, so its self-attention row is a single 1.00: it can only attend to itself.</div>
+          <div class="shape-note" data-tpl>At turn <span class="run">{t}</span>: decoder output <span class="mono run">{t} × {d}</span> · paper <span class="mono paperdim">{t} × 512</span>; self-attention <span class="mono run">{t} × {t}</span>; cross-attention <span class="mono run">{t} × {n}</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div class="row" data-pick="istep"></div><div id="vizIPass"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-last" data-name="Last row → logits">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">5</span><h3>Keep only the last row</h3></div>
+          <p>The decoder hands back one row per input token, but every row except the last is predicting a word we already have: row 0 predicts the word after ⟨s⟩, which we wrote at step 1. Only the <span class="hl">last row</span> looks past the end of what's been written.</p>
+          <p>So only that row goes through the final linear layer, which (as in Part 2) is the embedding table transposed <span class="sec-ref">§3.4</span>. Each logit is the dot product of the last row with one word's embedding.</p>
+          <div class="shape-note" data-tpl>Last row <span class="mono run">1 × {d}</span> · W<sub>emb</sub>ᵀ <span class="mono run">{d} × {V}</span> = logits <span class="mono run">1 × {V}</span> · paper <span class="mono paperdim">1 × 512</span> · <span class="mono paperdim">512 × 37000</span> = <span class="mono paperdim">1 × 37000</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div class="row" data-pick="istep"></div><div id="vizILast"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-softmax" data-name="P(next word)">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">6</span><h3>Turn the scores into probabilities</h3></div>
+          <p>Softmax turns the row of logits into one probability per vocabulary word, adding up to 1. This is the model's whole answer to “what comes next?”: not a word, but a <b>distribution</b> over every word it knows.</p>
+          <p>In training this row was compared with the correct word to get the loss. Here there is no correct word, so the next step has to <em>choose</em>.</p>
+          <div class="shape-note" data-tpl>P: <span class="mono run">1 × {V}</span> · paper <span class="mono paperdim">1 × 37000</span>. The row adds up to 1.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div class="row" data-pick="istep"></div><div id="vizISoftmax"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-pick" data-name="Pick a word">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">7</span><h3>Choose a word</h3></div>
+          <p>The simplest rule is <b>greedy decoding</b>: take the word with the highest probability. It's fast, has no settings, and always gives the same answer for the same sentence.</p>
+          <p>It isn't the only rule. You could keep several candidates alive (beam search, step 12, which is what the paper does), or roll a die weighted by the probabilities (sampling).</p>
+          <div class="why"><span class="label">Where the idea went next</span>Chat assistants usually <b>sample</b> instead, because the single most likely sentence tends to be bland and repetitive. A <em>temperature</em> divides the logits before the softmax: below 1 sharpens the distribution towards greedy, above 1 flattens it. Top-k and top-p (“nucleus”) sampling only roll among the most likely words. Translation, where one right answer matters more than variety, sticks with beam search.</div>
+          <div class="shape-note">1 × V probabilities in, <b>one token</b> out.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div class="row" data-pick="istep"></div><div id="vizIPick"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-append" data-name="Append → t + 1 tokens">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">8</span><h3>Feed it back in</h3></div>
+          <p>The chosen word is appended to the decoder's input, and the next turn of the loop starts with one more token. That word now gets its own embedding, its own positional encoding (position t), and becomes something later words can attend to.</p>
+          <p>Compare this with training. There, position t always read the <em>true</em> previous word (teacher forcing). Here it reads the model's <em>own</em> previous pick, right or wrong. A mistake early on is read back by every later step.</p>
+          <div class="why"><span class="label">Training vs. inference</span>This mismatch has a name, <b>exposure bias</b>: during training the model never sees its own mistakes, so it never practises recovering from them. Beam search (step 12) is one way to soften it.</div>
+          <div class="shape-note" data-tpl>Decoder input: <span class="mono run">({t},)</span> → <span class="mono run">({tn},)</span> tokens. Z stays <span class="mono run">{n} × {d}</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div class="row" data-pick="istep"></div><div id="vizIAppend"></div></div></div>
+      </article>
+    </section>
+
+    <!-- ============ I CHAPTER: the whole loop ============ -->
+    <section class="chapter">
+      <div class="chapter-head"><span class="label">Chapter 3</span><h2>Round and round</h2></div>
+
+      <article class="step" data-step="i-loop" data-name="The whole loop">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">9</span><h3>Run the loop to the end</h3></div>
+          <p>Steps 4 to 8 are one turn. Inference is just that turn, repeated: run the decoder on the tokens so far, keep the last row, softmax, pick, append.</p>
+          <p>Play it on the card. Every turn runs the whole decoder stack again on a sequence one token longer. The English side never changes; Z and its keys and values are the same at every turn.</p>
+          <p class="note">The weights are random stand-ins, so the words this model picks are nonsense. The loop is exactly the one a trained model runs; only the numbers inside differ. The top row on the card shows what a trained model would write for your sentence.</p>
+          <div class="shape-note" data-tpl>This run: <span class="mono run">{T}</span> turns, decoder input from <span class="mono run">(1,)</span> to <span class="mono run">({T},)</span> tokens.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizILoop"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-stop" data-name="When to stop">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">10</span><h3>When to stop</h3></div>
+          <p>The loop has no fixed length. It stops when the model picks the end token <b>⟨/s⟩</b>. During training, ⟨/s⟩ was the word the last position had to predict, so the model learned when a translation is finished.</p>
+          <p>A model can also fail to say ⟨/s⟩ and ramble on, so there is always a safety limit. The paper sets the maximum output length to <span class="hl">the input length + 50</span> <span class="sec-ref">§6.1</span>.</p>
+          <div class="shape-note" data-tpl>Stops at ⟨/s⟩, or after <span class="mono run">{n} + 50</span> tokens for this sentence. This card caps the toy run at <span class="mono run">8</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIStop"></div></div></div>
+      </article>
+    </section>
+
+    <!-- ============ I CHAPTER: faster and better ============ -->
+    <section class="chapter">
+      <div class="chapter-head"><span class="label">Chapter 4</span><h2>Faster, and better</h2></div>
+
+      <article class="step" data-step="i-cache" data-name="KV cache">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">11</span><h3>The KV cache: never redo a row</h3></div>
+          <p>Here's the pay-off of the mask. Because row r can only see rows 0 to r, appending a new token <b>cannot change any earlier row</b>, in any layer. Step through the loop in step 9 and you'll see rows 0 to t − 2 come out identical every time.</p>
+          <p>So recomputing them is wasted work. Real implementations keep each layer's self-attention keys and values for the tokens already processed (the <span class="hl">KV cache</span>) and, at every turn, push <b>only the new token's row</b> through the stack: one query, one new key and value appended to the cache, one row of scores against everything cached.</p>
+          <div class="why"><span class="label">Where did the mask go?</span>With a cache, the new row is the last row, and everything in the cache is in its past. There is no future to hide, so at inference time the mask has nothing left to do. It mattered during training, where all rows ran at once.</div>
+          <div class="shape-note" data-tpl>Per turn with the cache: Q <span class="mono run">1 × {dk}</span>, scores <span class="mono run">1 × t</span>, output <span class="mono run">1 × {d}</span>. The cache grows by one row per layer per turn: <span class="mono run">t × {dk}</span> per head · paper <span class="mono paperdim">t × 64</span>.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizICache"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-beam" data-name="Beam search">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">12</span><h3>Beam search: keep the best few</h3></div>
+          <p>Greedy commits to one word per turn and never looks back. But the best <em>sentence</em> is not always made of the best word at every turn: a slightly less likely first word can lead to a far more likely sentence.</p>
+          <p>Beam search keeps the <b>k best partial translations</b> (the beam) instead of one. Each turn, every one of them is extended by every word, each candidate is scored by the <b>sum of the log-probabilities</b> of its words, and only the top k survive. The paper uses k = 4 <span class="sec-ref">§6.1</span>; the card uses k = 2 so you can follow every candidate.</p>
+          <p>Summing log-probabilities always makes longer sentences look worse, since every extra word adds a negative number. So finished translations are compared after dividing by a <b>length penalty</b>, lp = ((5 + length) / 6)<sup>α</sup>, with α = 0.6 in the paper (from Wu et al., 2016).</p>
+          <div class="shape-note" data-tpl>Each turn: k beams × <span class="mono run">{V}</span> words = <span class="mono run">{kV}</span> candidates scored, k kept · paper <span class="mono paperdim">4 × 37000</span> = <span class="mono paperdim">148,000</span> candidates, 4 kept.</div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIBeam"></div></div></div>
+      </article>
+
+      <article class="step" data-step="i-final" data-name="The whole inference">
+        <div class="txt">
+          <div class="eyebrow"><span class="stepno">13</span><h3>The whole inference, in one picture</h3></div>
+          <p>The encoder reads the English sentence once. The decoder then writes the translation one token at a time, each turn reading Z through cross-attention and its own earlier words through self-attention, until it writes ⟨/s⟩.</p>
+          <p>The card lists every step with its shape. Compare it with Part 2's table: the same operations, but the German side now grows from 1 row to T rows, one turn at a time, and only one row per turn is new.</p>
+          <div class="homework-final">
+            <span class="label">Final homework</span>
+            <p>Now decode a sentence yourself. This Jupyter notebook uses the same tiny model as the encoder + decoder notebook (“the cat sat”, d_model 4, 2 heads). You turn its logits into probabilities and pick each word greedily, feeding every pick back in until ⟨/s⟩. Then you push one new token through self-attention <b>using a KV cache</b> and check it matches the full recompute, and finally run two turns of <b>beam search</b> by hand. Each answer is checked as you go.</p>
+            <div class="ctrls">
+              <button class="btn" data-nb="inf" type="button">⬇ Download the inference notebook</button>
+              <button class="btn small ghost" data-nb="full" type="button">Encoder + decoder notebook</button>
+            </div>
+            <p class="small-note" aria-live="polite" data-nb-msg></p>
+            <p class="small-note">It comes as a zip. Unzip it, then open the notebook in Jupyter, VS Code or Google Colab (File → Upload notebook). It only needs NumPy.</p>
+          </div>
+        </div>
+        <div class="viz"><div class="card tape"><div id="vizIFinal"></div></div></div>
+      </article>
+    </section>
+
+    <section class="chapter">
+      <div class="chapter-head"><span class="label">References</span></div>
+      <ol class="refs" style="margin-top:14px">
+        <li>Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., &amp; Polosukhin, I. (2017). Attention is all you need. <em>Advances in Neural Information Processing Systems 30</em>, 5998–6008. <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a></li>
+        <li>Wu, Y., Schuster, M., Chen, Z., Le, Q. V., Norouzi, M., et al. (2016). Google's neural machine translation system: Bridging the gap between human and machine translation. <a href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener">arXiv:1609.08144</a> (the length penalty, §7)</li>
+        <li>Holtzman, A., Buys, J., Du, L., Forbes, M., &amp; Choi, Y. (2020). The curious case of neural text degeneration. <em>ICLR 2020</em>. <a href="https://arxiv.org/abs/1904.09751" target="_blank" rel="noopener">arXiv:1904.09751</a> (top-p sampling)</li>
+      </ol>
+    </section>
+
+    <footer class="foot">
+      <span><b>Made with Claude.</b> Built with Claude by Anthropic; the vision, structure and ideas are entirely my own.</span>
+      <span><a href="#decoder">← Part 2: the decoder</a> · <a href="#home">back to the cover</a></span>
     </footer>
   </div>
 </div>
@@ -1250,13 +1489,13 @@ function route(){
   let h = location.hash.replace('#', '');
   try { h = decodeURIComponent(h); } catch (e) {}
   let page = null, target = null;
-  if (h === 'encoder' || h === 'decoder') page = h;
+  if (h === 'encoder' || h === 'decoder' || h === 'inference') page = h;
   else if (h){
     try { target = document.getElementById(h) || document.querySelector(`[data-step="${h}"]`); } catch (e) { target = null; }
     const pg = target && target.closest('.page');
     if (pg && pg.id !== 'home') page = pg.id;
   }
-  ['home', 'encoder', 'decoder'].forEach(id => { document.getElementById(id).hidden = id !== (page || 'home'); });
+  ['home', 'encoder', 'decoder', 'inference'].forEach(id => { document.getElementById(id).hidden = id !== (page || 'home'); });
   curPage = page; activeIdx = -1;
   if (page && h === page) window.scrollTo(0, 0);
   if (!page && (h === 'home' || h === '')) window.scrollTo(0, 0);
@@ -1649,6 +1888,7 @@ function fillTemplates(){
   const divStr = pairs <= 6 ? divs.map(v => +v.toPrecision(4)).join(', ') : `${divs.slice(0, 3).map(v => +v.toPrecision(3)).join(', ')}, … up to ${+divs[pairs - 1].toPrecision(4)}`;
   const vals = {n, d: c.d, dk: c.dk, dff: c.dff, h: c.h, N: c.N, sqd: Math.sqrt(c.d).toFixed(2), sqdk: Math.sqrt(c.dk).toFixed(2), pairs, divs: divStr};
   if (D && D.m) Object.assign(vals, {m: D.m, V: D.V, tw: D.tw.length, masked: D.m * (D.m - 1) / 2, mm: D.m * D.m, t1: D.inToks[1]});
+  if (I && I.T){ const t = I.steps[iStep].inToks.length; Object.assign(vals, {t, tn: t + 1, T: I.T, kV: BEAM_K * D.V}); }
   document.querySelectorAll('[data-tpl]').forEach(e => {
     if (!e.dataset.src) e.dataset.src = e.innerHTML;
     e.innerHTML = e.dataset.src.replace(/\{(\w+)\}/g, (m, k) => vals[k] ?? m);
@@ -2806,7 +3046,8 @@ function renderDecFinal(){
   const btns = el('div', 'ctrls');
   const b1 = el('a', 'btn', '← Part 1: the encoder'); b1.href = '#encoder';
   const b2 = el('a', 'btn', 'back to the cover'); b2.href = '#home';
-  btns.append(b1, b2); end.append(btns); host.append(end);
+  const b3 = el('a', 'btn', 'Part 3: inference →'); b3.href = '#inference';
+  btns.append(b1, b3, b2); end.append(btns); host.append(end);
   setAnims('d-final', []);
   buildPractice('d-final', () => [
     {type: 'num', q: 'How many sublayers (each with its own Add & Norm) does one decoder layer have?', ans: 3, tol: 0, fmt: v => String(v), hint: 'Masked self-attention, cross-attention, feed-forward.'},
@@ -2826,16 +3067,445 @@ function runDec(){
   dTokSel = Math.min(dTokSel, D.m - 1);
   ['d-target','d-shift','d-embed','d-mqkv','d-mask','d-msoftmax','d-mav','d-norm1','d-xqkv','d-xscores','d-xsoftmax','d-xav','d-norm2','d-ffn','d-norm3','d-stack','d-logits','d-probs','d-train','d-infer','d-final'].forEach(k => setAnims(k, []));
   renderDecoder();
+  runInf();
 }
 document.getElementById('tgtForm').addEventListener('submit', e => { e.preventDefault(); tgtTouched = true; runDec(); renderDimbar(); markSolved(); activeIdx = -1; updateActive(true); });
 document.getElementById('target').addEventListener('input', () => { tgtTouched = true; });
+
+
+/* ================================================================ inference: maths */
+const BEAM_K = 2, BEAM_ALPHA = 0.6, MAXGEN = MAXTGT + 1;
+const lenPen = L => Math.pow((5 + L) / 6, BEAM_ALPHA);
+let I = {};
+let iStep = 1;
+// Beam search over the toy vocabulary: keep the BEAM_K best partial translations by summed log-probability.
+function beamSearch(){
+  let beams = [{toks: [BOS], lp: 0}];
+  const finished = [], turns = [];
+  for (let t = 1; t <= MAXGEN && beams.length; t++){
+    const cands = [];
+    beams.forEach((b, bi) => {
+      const g = decForward(b.toks, S.Z, D.vocab), p = g.P[g.P.length - 1];
+      D.vocab.forEach((w, k) => cands.push({toks: [...b.toks, w], from: bi, w, p: p[k], lp: b.lp + Math.log(p[k])}));
+    });
+    cands.sort((a, b) => b.lp - a.lp);
+    const kept = cands.slice(0, BEAM_K);
+    kept.forEach(c => { c.kept = true; if (c.w === EOS) finished.push({...c, turn: t}); });
+    turns.push({beams, cands});
+    beams = kept.filter(c => c.w !== EOS);
+    if (finished.length >= BEAM_K) break;
+  }
+  const pool = finished.length ? finished : beams.map(b => ({...b, cut: true}));
+  pool.forEach(f => { f.len = f.toks.length - 1; f.lpen = lenPen(f.len); f.score = f.lp / f.lpen; });
+  pool.sort((a, b) => b.score - a.score);
+  return {turns, finished: pool, best: pool[0]};
+}
+function computeInf(){
+  const steps = D.inf, T = steps.length;
+  const greedyLp = steps.reduce((s, st) => s + Math.log(st.probs[D.vocab.indexOf(st.pick)]), 0);
+  I = {steps, T, greedyLp, beam: beamSearch(), stopped: steps[T - 1].pick === EOS};
+  iStep = Math.min(Math.max(iStep, 0), T - 1);
+}
+
+/* ================================================================ inference: shapes */
+const ISHAPES = {
+  'i-overview': () => null, 'i-encode': (n, t, c) => [n, c.d], 'i-start': (n, t, c) => [1, c.d],
+  'i-pass': (n, t, c) => [t, c.d], 'i-last': (n, t, c, V) => [1, V], 'i-softmax': (n, t, c, V) => [1, V], 'i-pick': () => [1],
+  'i-append': (n, t) => [t + 1], 'i-loop': (n, t, c, V, T) => [T], 'i-stop': (n, t, c, V, T) => [T],
+  'i-cache': (n, t, c) => [1, c.d], 'i-beam': (n, t, c, V, T, k) => [k, V], 'i-final': (n, t, c, V, T) => [T]
+};
+
+/* ================================================================ inference: pickers */
+function infPickers(){
+  document.querySelectorAll('[data-pick="istep"]').forEach(host => {
+    host.innerHTML = '<span class="label">turn</span>';
+    I.steps.forEach((st, k) => { const b = el('button', 'chip', `${k + 1}`); b.type = 'button'; b.setAttribute('aria-pressed', k === iStep); b.setAttribute('aria-label', `Turn ${k + 1}`);
+      b.onclick = () => { iStep = k; renderTurn(); infPickers(); fillTemplates(); updateActive(true); }; host.append(b); });
+  });
+}
+const stepNote = st => `turn ${I.steps.indexOf(st) + 1}: the decoder reads ${st.inToks.length} token${st.inToks.length > 1 ? 's' : ''}`;
+const pct = p => (p * 100).toFixed(p < .1 ? 1 : 0) + '%';
+function probBars(probs, opts = {}){
+  const order = D.vocab.map((_, k) => k).sort((a, b) => probs[b] - probs[a]);
+  const bars = el('div', 'bars'), best = order[0];
+  order.slice(0, opts.top || order.length).forEach(k => bars.append(el('div', 'bar-row' + (k === (opts.mark ?? best) ? ' tgt' : ''), `<span class="w">${D.vocab[k]}</span><span class="bar-track"><span class="bar-fill" style="width:${(probs[k] * 100).toFixed(1)}%"></span></span><span class="n">${pct(probs[k])}</span>`)));
+  return bars;
+}
+
+/* ================================================================ inference: step renderers */
+function renderIOverview(){
+  const host = document.getElementById('vizIOverview'); host.innerHTML = '';
+  const tbl = el('table', 'journey');
+  const rows = [
+    ['decoder input', 'the true translation, shifted right', 'only what it has written so far'],
+    ['decoder passes', '1 for the whole sentence', '1 per output token'],
+    ['rows of output used', 'all of them (one loss each)', 'only the last one'],
+    ['the next word comes from', 'the training data', 'the model\'s own pick'],
+    ['stops when', 'the sentence ends', 'it picks ⟨/s⟩ (or hits a limit)'],
+  ];
+  tbl.innerHTML = `<thead><tr><th></th><th>training (Part 2)</th><th>inference (this part)</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join('')}</tbody>`;
+  const words = [...D.tw, EOS];
+  const strip = el('div'); strip.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+  const ctr = el('div', 'ctrls'); const bPlay = el('button', 'btn small', '▶ Play'); bPlay.type = 'button'; ctr.append(bPlay);
+  let k = 0, timer = null;
+  const draw = () => {
+    strip.innerHTML = '';
+    strip.append(el('p', 'label', `a trained model translating “${S.toks.join(' ')}”, turn ${k + 1} of ${words.length}`), tokChips([BOS, ...D.tw.slice(0, k)]));
+    strip.append(el('p', 'calc', `reads ${k + 1} token${k ? 's' : ''} → writes <b>${words[k]}</b>${words[k] === EOS ? ' → done' : ' → appends it and goes again'}`));
+  };
+  const stop = () => { clearInterval(timer); timer = null; bPlay.textContent = '▶ Play'; };
+  const play = () => { if (timer){ stop(); return; } k = 0; draw(); bPlay.textContent = '⏸ Pause'; timer = setInterval(() => { if (k >= words.length - 1){ stop(); return; } k++; draw(); }, 1100); };
+  bPlay.onclick = play;
+  host.append(scrollWrap(tbl), strip, ctr,
+    el('p', 'note', 'Illustration: the words are your Part 2 translation, which is what a trained model would write. From step 3 on, every number is computed live by this notebook\'s (untrained) model.'));
+  k = words.length - 1; draw();
+  setAnims('i-overview', [{activate(){ if (!REDUCED && !timer && !this.done){ this.done = true; play(); } }, destroy: stop}]);
+  buildPractice('i-overview', () => [
+    {type: 'choice', q: 'At inference time, the decoder\'s input at position t is…', options: ['the word the model itself picked at the previous turn', 'the correct word from the training data', 'the English word at position t'], ans: 0, why: 'There is no correct translation to copy from, so it reads its own output.'},
+    {type: 'num', q: `A trained model writes “${D.tw.join(' ')}” and then ⟨/s⟩. How many times does the decoder stack run?`, ans: D.tw.length + 1, tol: 0, fmt: v => String(v), hint: 'One run per token written, and ⟨/s⟩ counts as a token.'},
+    {type: 'num', q: 'And how many times does the encoder run for the same sentence?', ans: 1, tol: 0, fmt: v => String(v), hint: 'The English sentence never changes.'}
+  ]);
+}
+
+function renderIEncode(){
+  const c = cfg(), n = S.n;
+  const host = document.getElementById('vizIEncode'); host.innerHTML = '';
+  const ca = I.steps[0].g.layers[0].ca.heads[0];
+  const mm = el('div', 'mm scroll-x');
+  mm.append(matrix(S.Z, {title: 'Z (from Part 1)', rowL: S.toks, small: true}).el, el('span', 'op', '→'),
+    matrix(ca.K, {title: 'K = Z · W<sub>K</sub>', rowL: S.toks, small: true}).el, matrix(ca.V, {title: 'V = Z · W<sub>V</sub>', rowL: S.toks, small: true}).el);
+  host.append(el('p', 'label', 'computed once, before the first German word'), mm,
+    el('p', 'calc', `K and V shown for decoder layer 1, head 1. Every layer and head has its own pair: ${c.N} layers × ${c.h} heads × 2 = <b>${c.N * c.h * 2}</b> matrices of ${n} × ${c.dk}, all reused at every turn.`));
+  setAnims('i-encode', []);
+  buildPractice('i-encode', () => { const j = rint(c.dk), r = rint(n); return [
+    {type: 'shape', q: `What shape is Z in the paper, for this ${n}-token sentence?`, ans: [n, 512], hint: 'One row per English token, d_model = 512 columns.'},
+    {type: 'num', q: 'In the paper (6 decoder layers, 8 heads), how many cross-attention K and V matrices can be computed once from Z?', ans: 96, tol: 0, fmt: v => String(v), hint: '6 layers × 8 heads × 2 (one K and one V).'},
+    {type: 'num', q: `Read K[“${S.toks[r]}”, ${j}] for layer 1, head 1 off the card.`, ans: ca.K[r][j], tol: .011, hint: `Row ${r} (“${S.toks[r]}”), column ${j} of K.`}
+  ]; });
+}
+
+function renderIStart(){
+  const c = cfg();
+  const host = document.getElementById('vizIStart'); host.innerHTML = '';
+  const g = I.steps[0].g, lab = [BOS];
+  const a = new Anim(host, {
+    parts: [{M: g.Es, title: 'E′[⟨s⟩] = E × √d', rowL: lab, small: true}, '+', {M: g.PE, title: 'PE[position 0]', rowL: lab, small: true}, '=', {M: g.Y0, title: 'Y0', rowL: lab, small: true, target: true}],
+    lights: (i, j) => [[0, i, j], [2, i, j]], dur: 3500,
+    strip: (i, j) => `Y0[⟨s⟩, d${j}] = ${fmtp(g.Es[i][j])} + ${fmtp(g.PE[i][j])} = <b>${fmt(g.Y0[i][j])}</b>   <span class="note">${j % 2 ? 'cos' : 'sin'}(0) = ${j % 2}</span>`
+  });
+  host.append(el('p', 'note', 'This is the whole input to the decoder at turn 1: a single row.'));
+  setAnims('i-start', [a]);
+  buildPractice('i-start', () => { const j = rint(c.d), j2 = rint(c.d); return [
+    {type: 'num', q: `What is PE[0, d${j2}]?`, ans: j2 % 2, tol: 0, fmt: v => String(v), hint: `Column d${j2} is ${j2 % 2 ? 'odd, so it uses cos' : 'even, so it uses sin'}. At position 0 the angle is 0.`},
+    {type: 'num', q: `Compute Y0[⟨s⟩, d${j}].`, data: `E′[⟨s⟩] = ${vecStr(g.Es[0])}<br>PE[0] = ${vecStr(g.PE[0])}`, ans: g.Y0[0][j], tol: .011, hint: `Add column d${j} of the two rows.`},
+    {type: 'shape', q: 'What shape is Y0 at turn 1 in the paper?', ans: [1, 512], hint: 'One token, d_model columns.'}
+  ]; });
+}
+
+function renderIPass(){
+  const c = cfg(), n = S.n;
+  const host = document.getElementById('vizIPass'); host.innerHTML = '';
+  const st = I.steps[iStep], L = st.g.layers[0], t = st.inToks.length;
+  const mm = el('div', 'mm scroll-x');
+  mm.append(markMasked(matrix(L.sa.heads[0].A, {title: `self-attention ${t} × ${t}`, rowL: st.inToks, colL: st.inToks, small: true, scale: 1})).el,
+    matrix(L.ca.heads[0].A, {title: `cross-attention ${t} × ${n}`, rowL: st.inToks, colL: S.toks, small: true, scale: 1}).el);
+  host.append(el('p', 'label', stepNote(st)), tokChips(st.inToks), mm,
+    el('p', 'calc', `Layer 1, head 1 shown. All ${c.N} layers run, each on all ${t} rows. Out comes the decoder output, <b>${t} × ${c.d}</b>.`));
+  setAnims('i-pass', []);
+  buildPractice('i-pass', () => { const k = 2 + rint(6); return [
+    {type: 'shape', q: `At turn ${k} the decoder reads ${k} tokens. What shape is one head's self-attention table?`, ans: [k, k], hint: 'Every token so far against every token so far.'},
+    {type: 'shape', q: `And its cross-attention table, for this ${n}-word English sentence?`, ans: [k, n], hint: 'Rows: German tokens so far. Columns: English words.'},
+    {type: 'num', q: 'At turn 1, what is the single self-attention weight of ⟨s⟩ on itself?', ans: 1, tol: .001, hint: 'Softmax over a row with one entry.'}
+  ]; });
+}
+
+function renderILast(){
+  const c = cfg();
+  const host = document.getElementById('vizILast'); host.innerHTML = '';
+  const st = I.steps[iStep], g = st.g, t = st.inToks.length;
+  const outM = matrix(g.out, {title: 'decoder output', rowL: st.inToks, small: true});
+  outM.cells.forEach((r, i) => r.forEach(cc => { if (i < t - 1) cc.style.opacity = '.35'; }));
+  const last = [g.out[t - 1]], WvT = T(g.Wv), lg = [g.logits[t - 1]];
+  host.append(el('p', 'label', stepNote(st)), scrollWrap(outM.el), el('p', 'note', `Faded rows predict words we already have. Only the last row (“${st.inToks[t - 1]}”) is used.`));
+  const a = new Anim(host, {
+    parts: [{M: last, title: 'last row', rowL: [st.inToks[t - 1]], small: true}, '·', {M: WvT, title: 'W<sub>emb</sub>ᵀ', colL: D.vocab, small: true}, '=', {M: lg, title: 'logits', colL: D.vocab, small: true, target: true}],
+    lights: mmLights(0, 2, c.d), dur: 5000,
+    strip: (i, j) => mmStrip(last, WvT, i, j, {result: lg[i][j], label: (i, j) => `logit[“${D.vocab[j]}”]`})
+  });
+  setAnims('i-last', [a]);
+  buildPractice('i-last', () => { const j = rint(D.V), s = dotR(last[0], g.Wv[j]); return [
+    {type: 'num', q: `Compute the logit of “${D.vocab[j]}”.`, data: `last row = ${vecStr(last[0])}<br>embedding of “${D.vocab[j]}” = ${vecStr(g.Wv[j])}`, ans: s, tol: tolOf(s), hint: 'A dot product: multiply column by column and add.', show: `${dotStr(last[0], g.Wv[j])} = ${fmt(s)}`},
+    {type: 'shape', q: 'What shape are the logits used at each turn, in the paper?', ans: [1, 37000], hint: 'One row (the last), one column per vocabulary entry.'},
+    {type: 'choice', q: 'Why is only the last row used?', options: ['The other rows predict words that are already written', 'The other rows are masked to zero', 'The last row is the only one cross-attention updates'], ans: 0, why: 'Row r predicts the token after position r; only the last row looks past the end.'}
+  ]; });
+}
+
+function renderISoftmax(){
+  const host = document.getElementById('vizISoftmax'); host.innerHTML = '';
+  const st = I.steps[iStep], t = st.inToks.length, lg = st.g.logits[t - 1].map(r2);
+  const ex = lg.map(v => Math.exp(v)), sum = ex.reduce((a, b) => a + b, 0);
+  const tbl = el('table', 'journey');
+  tbl.innerHTML = `<thead><tr><th>word</th><th>logit</th><th>e<sup>logit</sup></th><th>÷ ${sum.toFixed(2)}</th></tr></thead><tbody>${D.vocab.map((w, k) => `<tr><td>${w}</td><td class="mono">${fmt(lg[k])}</td><td class="mono">${ex[k].toFixed(2)}</td><td class="mono">${(ex[k] / sum).toFixed(3)}</td></tr>`).join('')}</tbody>`;
+  host.append(el('p', 'label', stepNote(st)), scrollWrap(tbl), probBars(st.probs), el('p', 'calc', `sum of e<sup>logit</sup> = ${ex.map(v => v.toFixed(2)).join(' + ')} = <b>${sum.toFixed(2)}</b>`));
+  setAnims('i-softmax', []);
+  buildPractice('i-softmax', () => { const k = rint(D.V), pr = ex[k] / sum; return [
+    {type: 'num', q: `The logit of “${D.vocab[k]}” is ${fmt(lg[k])}. What is e^logit?`, ans: ex[k], tol: .02 + ex[k] * .02, hint: `e^${fmt(lg[k])} on a calculator.`},
+    {type: 'num', q: `The e^logit of all ${D.V} words add up to ${sum.toFixed(2)}. What probability does “${D.vocab[k]}” get?`, ans: pr, tol: .011 + pr * .02, fmt: v => v.toFixed(3), hint: `${ex[k].toFixed(2)} ÷ ${sum.toFixed(2)}.`},
+    {type: 'num', q: 'What do all the probabilities in the row add up to?', ans: 1, tol: .001, fmt: v => String(v), hint: 'That\'s what dividing by the sum guarantees.'}
+  ]; });
+}
+
+function renderIPick(){
+  const host = document.getElementById('vizIPick'); host.innerHTML = '';
+  const st = I.steps[iStep], t = st.inToks.length, lg = st.g.logits[t - 1];
+  let temp = 1;
+  const chips = el('div', 'row'); chips.append(el('span', 'label', 'temperature'));
+  const box = el('div');
+  const draw = () => {
+    const p = softmaxRow(lg.map(v => v / temp));
+    box.innerHTML = '';
+    box.append(probBars(p), el('p', 'calc', temp === 1
+      ? `greedy picks the tallest bar: <b>${st.pick}</b> (${pct(st.probs[D.vocab.indexOf(st.pick)])}).`
+      : `logits ÷ ${temp} before the softmax: the bars get ${temp < 1 ? 'sharper (closer to greedy)' : 'flatter (more random picks)'}. Greedy still picks <b>${st.pick}</b>; a sampler would now pick it ${pct(Math.max(...p))} of the time.`));
+  };
+  [0.5, 1, 2].forEach(v => { const b = el('button', 'chip', String(v)); b.type = 'button'; b.setAttribute('aria-pressed', v === temp); b.onclick = () => { temp = v; chips.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === b)); draw(); }; chips.append(b); });
+  host.append(el('p', 'label', stepNote(st)), chips, box);
+  draw();
+  setAnims('i-pick', []);
+  buildPractice('i-pick', () => {
+    const k = rint(I.T), s = I.steps[k];
+    const a = r1(1 + Math.random() * 1.5), b = r1(a - .5 - Math.random());
+    const p2 = Math.exp(a / 2) / (Math.exp(a / 2) + Math.exp(b / 2));
+    return [
+      {type: 'choice', q: `At turn ${k + 1} the probabilities are: ${D.vocab.map((w, j) => `${w} ${pct(s.probs[j])}`).join(', ')}. Which word does greedy decoding pick?`, options: D.vocab.slice(), ans: D.vocab.indexOf(s.pick), why: 'Greedy always takes the highest probability.'},
+      {type: 'num', q: `A two-word toy: logits ${fmt(a)} and ${fmt(b)}. With temperature 2, what probability does the first word get?`, ans: p2, tol: .011, fmt: v => v.toFixed(3), hint: `Divide both logits by 2 first, then softmax: e^${fmt(a / 2)} ÷ (e^${fmt(a / 2)} + e^${fmt(b / 2)}).`},
+      {type: 'choice', q: 'Run greedy decoding twice on the same sentence. You get…', options: ['the same translation both times', 'a different translation each time'], ans: 0, why: 'No randomness is involved. Sampling would differ run to run.'}
+    ];
+  });
+}
+
+function renderIAppend(){
+  const c = cfg();
+  const host = document.getElementById('vizIAppend'); host.innerHTML = '';
+  const st = I.steps[iStep], t = st.inToks.length, nxt = I.steps[iStep + 1];
+  host.append(el('p', 'label', `before: turn ${iStep + 1} read ${t} token${t > 1 ? 's' : ''}`), tokChips(st.inToks));
+  if (st.pick === EOS){
+    host.append(el('p', 'calc', `The pick was <b>${EOS}</b>, so nothing is appended. The loop is over.`));
+  } else if (!nxt){
+    host.append(el('p', 'calc', `The pick was <b>${st.pick}</b>, but the length limit is reached, so the loop stops here (step 10).`));
+  } else {
+    const after = tokChips(nxt.inToks); after.lastChild.querySelector('.w').style.background = 'var(--hl)';
+    host.append(el('p', 'label', `after: turn ${iStep + 2} reads ${t + 1} tokens`), after);
+    host.append(scrollWrap(matrix([nxt.g.Y0[t]], {title: `new row of Y0: E′[“${st.pick}”] + PE[position ${t}]`, rowL: [st.pick], small: true}).el));
+    host.append(el('p', 'note', `Rows 0 to ${t - 1} of Y0 are the same as last turn. Only this row is new.`));
+  }
+  setAnims('i-append', []);
+  buildPractice('i-append', () => { const k = 1 + rint(6); return [
+    {type: 'shape', q: `After the model has written ${k} words, what shape is the decoder's input (the list of tokens)?`, ans: [k + 1], hint: 'Its own words, plus ⟨s⟩ in front.'},
+    {type: 'num', q: `The model's ${k === 1 ? 'first' : `word number ${k}`} is appended. At which position does it go (⟨s⟩ is position 0)?`, ans: k, tol: 0, fmt: v => String(v), hint: 'Count ⟨s⟩ as position 0.'},
+    {type: 'choice', q: 'If the model picks a wrong word at turn 2, at turn 3 the decoder reads…', options: ['the wrong word', 'the correct word instead'], ans: 0, why: 'There is no correct word to swap in. That is exposure bias.'}
+  ]; });
+}
+
+function renderTurn(){ renderIPass(); renderILast(); renderISoftmax(); renderIPick(); renderIAppend(); }
+
+function renderILoop(){
+  const c = cfg(), n = S.n;
+  const host = document.getElementById('vizILoop'); host.innerHTML = '';
+  let t = 0, timer = null;
+  const tr = el('div'); tr.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+  tr.append(el('p', 'label', 'a trained model would write'), el('p', 'hand', `${BOS} ${D.tw.join(' ')} ${EOS}`));
+  const out = el('div'); out.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+  const ctr = el('div', 'ctrls');
+  const bBack = el('button', 'btn small', '◀ Back'), bStep = el('button', 'btn small', 'Next turn ▶'), bPlay = el('button', 'btn small', '▶ Play'), bReset = el('button', 'btn small ghost', 'Start over');
+  [bBack, bStep, bPlay, bReset].forEach(b => { b.type = 'button'; ctr.append(b); });
+  const tbl = el('table', 'journey'); tbl.style.minWidth = '440px';
+  const stop = () => { clearInterval(timer); timer = null; bPlay.textContent = '▶ Play'; };
+  const draw = () => {
+    const st = I.steps[t], len = st.inToks.length;
+    out.innerHTML = '';
+    out.append(el('p', 'label', `this model, ${stepNote(st)}`), tokChips(st.inToks));
+    out.append(probBars(st.probs, {top: 3}));
+    let same = '';
+    if (t > 0){ const prev = I.steps[t - 1].g.out; if (prev.every((row, r) => row.every((v, j) => v === st.g.out[r][j]))) same = `<br>✓ Rows 0 to ${len - 2} of the decoder output match the last turn exactly. Only row ${len - 1} is new (step 11).`; }
+    out.append(el('p', 'calc', `picked <b>${st.pick}</b>${st.pick === EOS ? ' → the translation is finished' : ' → appended'}.${same}`));
+    const sofar = I.steps.slice(0, t + 1).map(s => s.pick).filter(w => w !== EOS);
+    out.append(el('p', 'hand', `“${sofar.join(' ')}${st.pick === EOS ? '' : ' …'}”`));
+    tbl.querySelectorAll('tbody tr').forEach((r, k) => r.classList.toggle('on', k === t));
+    bBack.disabled = t === 0; bStep.disabled = t === I.T - 1;
+  };
+  tbl.innerHTML = `<thead><tr><th>turn</th><th>reads</th><th>self-attn</th><th>cross-attn</th><th>pick</th><th>P(pick)</th></tr></thead><tbody>${I.steps.map((st, k) => { const len = st.inToks.length; return `<tr><td>${k + 1}</td><td>${len} token${len > 1 ? 's' : ''}</td><td class="mono run">${len} × ${len}</td><td class="mono run">${len} × ${n}</td><td>${st.pick}</td><td class="mono">${st.probs[D.vocab.indexOf(st.pick)].toFixed(2)}</td></tr>`; }).join('')}</tbody>`;
+  bBack.onclick = () => { stop(); if (t > 0){ t--; draw(); } };
+  bStep.onclick = () => { stop(); if (t < I.T - 1){ t++; draw(); } };
+  bReset.onclick = () => { stop(); t = 0; draw(); };
+  const play = () => { if (timer){ stop(); return; } if (t >= I.T - 1) t = 0; draw(); bPlay.textContent = '⏸ Pause'; timer = setInterval(() => { if (t >= I.T - 1){ stop(); return; } t++; draw(); }, 1400); };
+  bPlay.onclick = play;
+  host.append(tr, ctr, out, scrollWrap(tbl), el('p', 'note', `Z (${n} × ${c.d}) and its cross-attention keys and values are the same in every row of this table.`));
+  draw();
+  setAnims('i-loop', [{activate(){}, destroy: stop}]);
+  buildPractice('i-loop', () => { const k = 2 + rint(6); return [
+    {type: 'num', q: 'How many turns did this model\'s loop take?', ans: I.T, tol: 0, fmt: v => String(v), hint: 'Count the rows of the table on the card.'},
+    {type: 'shape', q: `At turn ${k}, what shape is the decoder output (in the paper)?`, ans: [k, 512], hint: `${k} tokens so far, d_model = 512.`},
+    {type: 'choice', q: 'Which of these is recomputed at every turn (without a cache)?', options: ['The decoder stack', 'The encoder stack', 'Z'], ans: 0, why: 'Only the German side grows; the English side is done.'}
+  ]; });
+}
+
+function renderIStop(){
+  const n = S.n;
+  const host = document.getElementById('vizIStop'); host.innerHTML = '';
+  const e = D.vocab.indexOf(EOS);
+  const bars = el('div', 'bars');
+  I.steps.forEach((st, k) => bars.append(el('div', 'bar-row' + (st.pick === EOS ? ' tgt' : ''), `<span class="w">turn ${k + 1}</span><span class="bar-track"><span class="bar-fill" style="width:${(st.probs[e] * 100).toFixed(1)}%"></span></span><span class="n">${pct(st.probs[e])}</span>`)));
+  host.append(el('p', 'label', `P(${EOS}) at every turn of this run`), bars,
+    el('p', 'calc', I.stopped ? `Turn ${I.T}: ${EOS} had the highest probability, so greedy picked it and the loop <b>stopped</b>.` : `${EOS} never had the highest probability, so the loop ran into the toy limit of ${MAXGEN} turns and was <b>cut off</b>. In the paper the limit would be ${n} + 50 = ${n + 50}.`),
+    el('p', 'note', 'An untrained model has no idea when a translation is finished, so either can happen. Training on sentences that end with ⟨/s⟩ is what teaches it.'));
+  setAnims('i-stop', []);
+  buildPractice('i-stop', () => { const L = 5 + rint(30); return [
+    {type: 'num', q: `Using the paper's rule, what is the longest translation allowed for a ${L}-token English sentence?`, ans: L + 50, tol: 0, fmt: v => String(v), hint: 'Input length + 50 (§6.1).'},
+    {type: 'choice', q: 'How does a trained model know when to stop?', options: ['It learned to predict ⟨/s⟩ after the last word', 'It stops when it reaches the English length', 'The softmax adds up to 1'], ans: 0, why: 'Every training target ends with ⟨/s⟩.'},
+    {type: 'choice', q: 'Why is a length limit still needed?', options: ['The model might never pick ⟨/s⟩', 'The mask runs out of rows', 'Z only has n rows'], ans: 0, why: 'Without it a looping model would run forever.'}
+  ]; });
+}
+
+function renderICache(){
+  const c = cfg();
+  const host = document.getElementById('vizICache'); host.innerHTML = '';
+  const Tn = I.T;
+  const grid = el('div', 'shift-grid'); grid.style.gridTemplateColumns = `auto repeat(${Tn}, auto)`;
+  let cached = true;
+  const chips = el('div', 'row'); chips.append(el('span', 'label', 'mode'));
+  const calc = el('div', 'calc');
+  const draw = () => {
+    grid.innerHTML = '';
+    grid.append(el('span', 'h', 'turn \\ row'));
+    for (let k = 0; k < Tn; k++) grid.append(el('span', 'shift-pos static', String(k)));
+    for (let tt = 1; tt <= Tn; tt++){
+      grid.append(el('span', 'h', `turn ${tt}`));
+      for (let r = 0; r < Tn; r++){
+        const s = el('span', 'mono');
+        s.style.cssText = 'display:block;width:30px;height:20px;border-radius:4px;border:1.5px solid var(--card-edge)';
+        if (r === tt - 1){ s.style.background = 'rgb(var(--pos-rgb)/.65)'; s.style.borderColor = 'var(--ink)'; }
+        else if (r < tt - 1){ if (cached) s.style.background = 'rgb(var(--neg-rgb)/.22)'; else { s.style.background = 'rgb(var(--pos-rgb)/.65)'; s.style.borderColor = 'var(--ink)'; s.style.opacity = '.55'; } }
+        else { s.style.borderStyle = 'dashed'; s.style.opacity = '.4'; }
+        grid.append(s);
+      }
+    }
+    const rows = cached ? Tn : Tn * (Tn + 1) / 2;
+    const dots = cached ? Tn * (Tn + 1) / 2 : I.steps.reduce((a, st) => a + st.inToks.length ** 2, 0);
+    calc.innerHTML = `${cached ? 'With the cache' : 'Without a cache'}: <b>${rows}</b> rows pushed through each layer over ${Tn} turns, and <b>${dots}</b> self-attention scores per head.<br><span class="note">red = computed this turn · ${cached ? 'blue = read from the cache' : 'faded red = recomputed, same answer as before'}</span>`;
+  };
+  [['with KV cache', true], ['without', false]].forEach(([lab, v]) => { const b = el('button', 'chip', lab); b.type = 'button'; b.setAttribute('aria-pressed', v === cached); b.onclick = () => { cached = v; chips.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === b)); draw(); }; chips.append(b); });
+  const lastSt = I.steps[Tn - 1], hd = lastSt.g.layers[0].sa.heads[0];
+  const mm = el('div', 'mm scroll-x');
+  mm.append(matrix(hd.K, {title: 'K cache', rowL: lastSt.inToks, small: true}).el, matrix(hd.V, {title: 'V cache', rowL: lastSt.inToks, small: true}).el);
+  host.append(chips, scrollWrap(grid), calc, el('p', 'label', `the cache after turn ${Tn} (layer 1, head 1): one row per token`), mm);
+  draw();
+  setAnims('i-cache', []);
+  buildPractice('i-cache', () => { const k = 3 + rint(6), tt = 10 * (1 + rint(5)); return [
+    {type: 'num', q: `Without a cache, how many token rows go through each layer over ${k} turns?`, ans: k * (k + 1) / 2, tol: 0, fmt: v => String(v), hint: `1 + 2 + … + ${k}: turn t recomputes all t rows.`},
+    {type: 'num', q: `With a KV cache, how many over the same ${k} turns?`, ans: k, tol: 0, fmt: v => String(v), hint: 'One new row per turn.'},
+    {type: 'num', q: `How many numbers does the paper's self-attention KV cache hold after ${tt} tokens? (6 layers, K and V, d_model 512 per token)`, ans: 6 * 2 * tt * 512, tol: 0, fmt: v => v.toLocaleString('en'), hint: `6 × 2 × ${tt} × 512. The 8 heads of 64 together make 512.`},
+    {type: 'choice', q: 'Why is the mask not needed for the new row when using a cache?', options: ['Everything in the cache is in its past', 'The cache is already masked', 'Cross-attention replaces it'], ans: 0, why: 'The new token is the latest one, so there is no future to hide.'}
+  ]; });
+}
+
+function renderIBeam(){
+  const host = document.getElementById('vizIBeam'); host.innerHTML = '';
+  const B = I.beam; let t = 0;
+  const out = el('div'); out.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+  const ctr = el('div', 'ctrls');
+  const bBack = el('button', 'btn small', '◀ Back'), bStep = el('button', 'btn small', 'Next turn ▶'), bEnd = el('button', 'btn small ghost', 'Final ranking');
+  [bBack, bStep, bEnd].forEach(b => { b.type = 'button'; ctr.append(b); });
+  const seq = toks => toks.slice(1).join(' ');
+  const draw = () => {
+    out.innerHTML = '';
+    if (t < B.turns.length){
+      const tu = B.turns[t];
+      out.append(el('p', 'label', `turn ${t + 1}: ${tu.beams.length} beam${tu.beams.length > 1 ? 's' : ''} × ${D.V} words = ${tu.cands.length} candidates`));
+      out.append(el('p', 'calc', 'beams going in: ' + tu.beams.map(b => `<b>${b.toks.join(' ')}</b> (${b.lp.toFixed(2)})`).join(' · ')));
+      const tbl = el('table', 'journey'); tbl.style.minWidth = '480px';
+      tbl.innerHTML = `<thead><tr><th>candidate</th><th>P(new word)</th><th>score = Σ ln P</th><th></th></tr></thead><tbody>${tu.cands.slice(0, Math.min(tu.cands.length, BEAM_K + 4)).map(cd => `<tr${cd.kept ? ' class="on"' : ''}><td>${seq(cd.toks)}</td><td class="mono">${cd.p.toFixed(3)}</td><td class="mono">${tu.beams[cd.from].lp.toFixed(2)} + ln ${cd.p.toFixed(3)} = ${cd.lp.toFixed(2)}</td><td>${cd.kept ? (cd.w === EOS ? 'finished' : 'kept') : ''}</td></tr>`).join('')}</tbody>`;
+      out.append(scrollWrap(tbl), el('p', 'note', `Showing the top ${Math.min(tu.cands.length, BEAM_K + 4)}. The highlighted ${BEAM_K} survive; one ending in ${EOS} is set aside as a finished translation.`));
+    } else {
+      const tbl = el('table', 'journey'); tbl.style.minWidth = '520px';
+      tbl.innerHTML = `<thead><tr><th>finished translation</th><th>Σ ln P</th><th>length</th><th>lp</th><th>Σ ln P ÷ lp</th></tr></thead><tbody>${B.finished.map((f, k) => `<tr${k === 0 ? ' class="on"' : ''}><td>${seq(f.toks)}${f.cut ? ' (cut off)' : ''}</td><td class="mono">${f.lp.toFixed(2)}</td><td class="mono">${f.len}</td><td class="mono">${f.lpen.toFixed(3)}</td><td class="mono">${f.score.toFixed(2)}</td></tr>`).join('')}</tbody>`;
+      const g = I.steps.map(s => s.pick).join(' ');
+      out.append(el('p', 'label', 'final ranking, with the length penalty'), scrollWrap(tbl),
+        el('p', 'calc', `beam search: <b>${seq(B.best.toks)}</b> (Σ ln P = ${B.best.lp.toFixed(2)})<br>greedy: <b>${g}</b> (Σ ln P = ${I.greedyLp.toFixed(2)})`),
+        el('p', 'note', seq(B.best.toks) === g ? 'Here both agree: greedy happened to find the best sentence too.' : 'They differ: keeping a second candidate alive found a sentence greedy never considered.'));
+    }
+    bBack.disabled = t === 0; bStep.disabled = t >= B.turns.length; bEnd.disabled = t >= B.turns.length;
+  };
+  bBack.onclick = () => { if (t > 0){ t--; draw(); } };
+  bStep.onclick = () => { if (t < B.turns.length){ t++; draw(); } };
+  bEnd.onclick = () => { t = B.turns.length; draw(); };
+  host.append(el('p', 'note', `Beam size k = ${BEAM_K} (paper: 4), length penalty α = ${BEAM_ALPHA}.`), ctr, out);
+  draw();
+  setAnims('i-beam', []);
+  buildPractice('i-beam', () => {
+    const p1 = r2(.3 + Math.random() * .5), p2 = r2(.2 + Math.random() * .6), L = 3 + rint(8);
+    const s1 = r2(-(0.5 + Math.random() * 2)), s2 = r2(s1 - .1 - Math.random()), s3 = r2(s1 + .2 + Math.random());
+    return [
+      {type: 'num', q: `A beam's first word had P = ${p1} and its second word has P = ${p2}. What is its score (sum of the natural logs)?`, ans: Math.log(p1) + Math.log(p2), tol: .02, hint: `ln ${p1} + ln ${p2}. Both are negative.`},
+      {type: 'num', q: `What is the length penalty lp = ((5 + L) / 6)^0.6 for a ${L}-token translation?`, ans: lenPen(L), tol: .011, fmt: v => v.toFixed(3), hint: `(5 + ${L}) / 6 = ${((5 + L) / 6).toFixed(3)}, then raise it to the power 0.6.`},
+      {type: 'choice', q: `With k = 2, three candidates score ${fmt(s1)}, ${fmt(s2)} and ${fmt(s3)}. Which one is dropped?`, options: [fmt(s1), fmt(s2), fmt(s3)], ans: 1, why: 'Scores are sums of negative logs, so the most negative is the least likely.'}
+    ];
+  });
+}
+
+function renderIFinal(){
+  const c = cfg(), n = S.n, V = D.V, Tn = I.T;
+  const host = document.getElementById('vizIFinal'); host.innerHTML = '';
+  const R = s => shapeStr(s);
+  const rows = [
+    ['encode the English, once', 'Z', [n, c.d], [n, 512], 'never changes again'],
+    ['cross K, V per layer and head, once', 'K, V', [n, c.dk], [n, 64], 'reused every turn'],
+    ['start: ⟨s⟩ + PE[0]', 'Y0', [1, c.d], [1, 512], 'one row'],
+    ['turn t: decoder on t tokens', 'Y', ['t', c.d], ['t', 512], 'grows one row per turn'],
+    ['  … with a KV cache', 'new row', [1, c.d], [1, 512], 'only the new token'],
+    ['last row · W_embᵀ', 'logits', [1, V], [1, 37000], 'one score per word'],
+    ['softmax', 'P', [1, V], [1, 37000], 'a distribution'],
+    ['greedy / beam / sample', 'token', [1], [1], 'one word chosen'],
+    ['append, repeat until ⟨/s⟩', 'output', [Tn], ['≤ n + 50'], 'length decided by the model'],
+  ];
+  const tbl = el('table', 'journey');
+  tbl.innerHTML = `<thead><tr><th>step</th><th>name</th><th>this run</th><th>paper</th><th>what happens</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="mono run">${R(r[2])}</td><td class="mono paperdim">${R(r[3])}</td><td>${r[4]}</td></tr>`).join('')}</tbody>`;
+  host.append(scrollWrap(tbl));
+  const end = el('div', 'end-card');
+  end.append(el('p', 'hand', 'Encode once. Then predict, pick, append, repeat, reading the encoder at every layer, until the model says it is done.'));
+  const btns = el('div', 'ctrls');
+  const b1 = el('a', 'btn', '← Part 2: the decoder'); b1.href = '#decoder';
+  const b2 = el('a', 'btn', 'back to the cover'); b2.href = '#home';
+  btns.append(b1, b2); end.append(btns); host.append(end);
+  setAnims('i-final', []);
+  buildPractice('i-final', () => [
+    {type: 'choice', q: 'Which part of the model runs once per translated sentence?', options: ['The encoder', 'The decoder', 'The final softmax'], ans: 0, why: 'The decoder and softmax run once per output token.'},
+    {type: 'choice', q: 'What does a KV cache store?', options: ['Each layer\'s self-attention keys and values for tokens already processed', 'The probabilities of earlier turns', 'The English sentence'], ans: 0, why: 'Those never change once computed, thanks to the mask.'},
+    {type: 'choice', q: 'Which decoding rule did the paper use for its translation results?', options: ['Beam search, k = 4, α = 0.6', 'Greedy decoding', 'Sampling with temperature 1'], ans: 0, why: '§6.1.'}
+  ]);
+}
+
+function renderInference(){
+  fillTemplates();
+  renderIOverview(); renderIEncode(); renderIStart();
+  infPickers(); renderTurn();
+  renderILoop(); renderIStop(); renderICache(); renderIBeam(); renderIFinal();
+}
+const I_STEPS = ['i-overview','i-encode','i-start','i-pass','i-last','i-softmax','i-pick','i-append','i-loop','i-stop','i-cache','i-beam','i-final'];
+function runInf(){
+  computeInf();
+  I_STEPS.forEach(k => setAnims(k, []));
+  renderInference();
+}
 
 /* ================================================================ scroll focus + header */
 const PAGES = {
   encoder: {steps: [...document.querySelectorAll('#encoder .step')], dots: 'dots', dimbar: 'dimbar', name: 'shapeName', run: 'shapeRun', paper: 'shapePaper',
     shape: (k, paper) => SHAPES[k](S.n, paper ? PAPER : cfg())},
   decoder: {steps: [...document.querySelectorAll('#decoder .step')], dots: 'dotsD', dimbar: 'dimbarD', name: 'shapeNameD', run: 'shapeRunD', paper: 'shapePaperD',
-    shape: (k, paper) => DSHAPES[k](S.n, D.m, paper ? PAPER : cfg(), paper ? 37000 : D.V)}
+    shape: (k, paper) => DSHAPES[k](S.n, D.m, paper ? PAPER : cfg(), paper ? 37000 : D.V)},
+  inference: {steps: [...document.querySelectorAll('#inference .step')], dots: 'dotsI', dimbar: 'dimbarI', name: 'shapeNameI', run: 'shapeRunI', paper: 'shapePaperI',
+    shape: (k, paper) => ISHAPES[k](S.n, I.steps[iStep].inToks.length, paper ? PAPER : cfg(), paper ? 37000 : D.V, I.T, paper ? 4 : BEAM_K)}
 };
 let curPage = null;
 function renderDots(){
@@ -3248,8 +3918,9 @@ renderWsOpts();
 </script>
 <script type="text/plain" id="nbZip">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</script>
 <script type="text/plain" id="nbZipFull">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</script>
+<script type="text/plain" id="nbZipInf">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</script>
 <script>
-const NB = {enc: {zip: 'nbZip', file: 'encoder-practice.zip', open: 'encoder-practice.ipynb'}, full: {zip: 'nbZipFull', file: 'transformer-practice.zip', open: 'transformer-practice.ipynb'}};
+const NB = {enc: {zip: 'nbZip', file: 'encoder-practice.zip', open: 'encoder-practice.ipynb'}, full: {zip: 'nbZipFull', file: 'transformer-practice.zip', open: 'transformer-practice.ipynb'}, inf: {zip: 'nbZipInf', file: 'inference-practice.zip', open: 'inference-practice.ipynb'}};
 document.querySelectorAll('[data-nb]').forEach(btn => btn.addEventListener('click', async () => {
   const o = NB[btn.dataset.nb];
   const msg = btn.closest('.homework-final').querySelector('[data-nb-msg]');

@@ -188,9 +188,12 @@ and for smooth scrolling.
 
 ### 4.3 Page structure
 
-One HTML file, three "pages" switched by the URL hash (`#home`, `#<part1>`, `#<part2>`), plus deep links
-to any step (`#tokens`, `#embed`). Attention has encoder and decoder parts; pick the natural halves of
-your architecture (one part is fine for a decoder-only model, three for an encoder, a bridge and a head).
+One HTML file, a few "pages" switched by the URL hash (`#home`, `#<part1>`, `#<part2>`, …), plus deep links
+to any step (`#tokens`, `#embed`). Attention has encoder, decoder and inference parts; pick the natural halves of
+your architecture (one part is fine for a decoder-only model, three for an encoder, a bridge and a head). A
+last part on **how the trained model is used** (inference: the generation loop, caching, decoding strategies)
+is worth adding to any generative architecture; Attention's Part 3 is the template. Add every new page id to
+`route()` and to `PAGES`.
 
 **Cover (`#home`)**, in this order:
 
@@ -278,6 +281,7 @@ Suggested chapter skeleton for most architectures:
 | The per-position network | expand, nonlinearity, compress, add & norm |
 | Stacking | repeat N times, the output |
 | The head | to logits / classes / pixels, softmax, how training vs. inference differ |
+| Using it (inference) | encode once, the generation loop one turn at a time, stopping, caching, decoding strategies (greedy, beam, sampling) |
 
 ---
 
