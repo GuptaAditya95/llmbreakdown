@@ -39,6 +39,7 @@ vivid versions of how you imagine these processes.
 
 ```
 index.html          the hub page listing every breakdown
+PLAYBOOK.md         how to build the next breakdown
 attention/          Attention, by hand
   index.html        the interactive site
   notes/            walkthroughs, worked calculations and practice notebooks
@@ -46,6 +47,9 @@ attention/          Attention, by hand
 ```
 
 ### Adding a breakdown
+
+The full recipe (design system, page structure, flow, exercises, notebooks, worksheet, publishing) is in
+[PLAYBOOK.md](PLAYBOOK.md). The short version:
 
 1. Create a folder for it (for example `bert/`) with its own `index.html` and any notes.
 2. In the root `index.html`, copy an existing `<li class="card">` block and point its link at the new folder.
