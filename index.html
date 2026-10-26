@@ -69,9 +69,16 @@ h2{font-family:var(--font-hand);font-weight:700;font-size:2.4rem;margin:56px 0 1
 .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:20px;margin:0;padding:0;list-style:none}
 .how li{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
 .how b{font-weight:500}
+.star-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:24px 0 0}
+.star-btn{display:inline-flex;align-items:center;gap:.45em;font-family:var(--font-hand);font-weight:700;font-size:1.4rem;text-decoration:none;border:2px solid var(--ink);
+  border-radius:8px 12px 7px 11px;padding:2px 16px;background:var(--card);box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.star-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.star-ic{color:var(--accent);line-height:1}
+.star-count{font-family:var(--font-mono);font-weight:400;font-size:.8rem;border-left:1.5px solid var(--card-edge);padding-left:.6em}
+.star-row .note{font-family:var(--font-hand);font-size:1.3rem;color:var(--ink-soft)}
 footer{margin-top:64px;padding-top:20px;border-top:1px dashed var(--card-edge);color:var(--ink-soft);font-size:.95rem}
 footer .star{font-family:var(--font-hand);font-size:1.5rem;color:var(--ink)}
-@media (prefers-reduced-motion:reduce){.go{transition:none}}
+@media (prefers-reduced-motion:reduce){.go,.star-btn{transition:none}}
 </style>
 </head>
 <body>
@@ -80,6 +87,7 @@ footer .star{font-family:var(--font-hand);font-size:1.5rem;color:var(--ink)}
   <h1>Let's break it <span class="u">down</span></h1>
   <p class="lede">Each breakdown takes one architecture behind modern AI and walks through a full forward pass, <span class="hl">every matrix, every shape, every sum</span>, with a practice panel beside each step so you do the math yourself.</p>
   <p class="sub">For anyone who enjoys learning architectures from scratch. Finish one and you should be able to close your eyes and picture how it works, which makes every variant after it far more intuitive.</p>
+  <div class="star-row"><a class="star-btn" href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener"><span class="star-ic" aria-hidden="true">★</span> Star on GitHub<span class="star-count" data-stars hidden></span></a><span class="note">a new architecture every day, star to follow along</span></div>
 
   <h2>Breakdowns</h2>
   <!-- To add a breakdown: put its site in a new folder and copy one <li class="card"> below. -->
@@ -115,9 +123,16 @@ footer .star{font-family:var(--font-hand);font-size:1.5rem;color:var(--ink)}
   </ul>
 
   <footer>
-    <p class="star">Like it? <a href="https://github.com/GuptaAditya95/llmbreakdown">Star the repo on GitHub ⭐</a></p>
-    <p>Corrections and ideas are welcome as issues or pull requests.</p>
+    <p class="star">Like it? <a href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener">Star the repo on GitHub ⭐</a></p>
+    <p>Corrections and ideas are welcome as <a href="https://github.com/GuptaAditya95/llmbreakdown/issues" target="_blank" rel="noopener">issues</a> or pull requests.</p>
   </footer>
 </main>
+<script>
+/* star count on the GitHub buttons; buttons work without it */
+fetch('https://api.github.com/repos/GuptaAditya95/llmbreakdown').then(r => r.ok ? r.json() : null).then(d => {
+  if (!d || typeof d.stargazers_count !== 'number') return;
+  document.querySelectorAll('[data-stars]').forEach(el => { el.textContent = d.stargazers_count.toLocaleString(); el.hidden = false; });
+}).catch(() => {});
+</script>
 </body>
 </html>

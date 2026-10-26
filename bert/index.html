@@ -141,6 +141,10 @@ p{margin:0}
 .paper-note.sticky{background:var(--hl)}
 .cite-box{font-family:var(--font-mono);font-size:.78rem;line-height:1.55;background:var(--paper);border:1px dashed var(--card-edge);padding:10px 12px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
 .cite-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.star-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.star-ic{color:rgb(var(--pos-rgb));font-size:1.1em;line-height:1}
+.star-count{font-family:var(--font-mono);font-size:.78em;border-left:1.5px solid var(--card-edge);padding-left:.6em;margin-left:.1em}
+.foot .star-link{color:var(--ink)}
 .foot{margin-top:56px;padding-top:18px;border-top:2px dashed var(--card-edge);display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;color:var(--ink-soft);font-size:.92rem}
 
 /* ---------- encoder header ---------- */
@@ -510,6 +514,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
         <h1>BERT, <span class="under">by hand<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 14 C 40 4, 90 18, 130 9 S 185 6, 198 12" fill="none" stroke="rgb(var(--pos-rgb))" stroke-width="5" stroke-linecap="round"/></svg></span></h1>
         <p class="lede">This is a hands-on walkthrough of <em>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em>, the paper by Jacob Devlin, Ming-Wei Chang, Kenton Lee and Kristina Toutanova at Google AI Language. You type two sentences, and every number BERT computes is worked out in front of you, step by step, with the matrix shapes written next to it. Then you do the same sums yourself.</p>
         <p>If you've done <a href="../attention/">Attention, by hand</a>, you already know most of BERT. It is the Transformer's encoder with the decoder taken away, a slightly different input, and two small heads on top that give it a new job. Part 1 matches every step to the encoder you know. Part 2 is the part that's new.</p>
+        <div class="star-row"><a class="btn small" href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener"><span class="star-ic" aria-hidden="true">★</span> Star on GitHub<span class="star-count" data-stars hidden></span></a><span class="note">Found it useful? A star helps other learners find it.</span></div>
         <div class="parts">
           <div class="part">
             <span class="num">Part 1</span>
@@ -678,6 +683,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
     </div>
 
     <footer class="foot">
+      <span><a class="star-link" href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener">★ Star the repo on GitHub</a> · ideas and fixes welcome as <a href="https://github.com/GuptaAditya95/llmbreakdown/issues" target="_blank" rel="noopener">issues</a></span>
       <span><b>Made with Claude.</b> This site was built with Claude by Anthropic. The vision, structure and ideas are entirely my own.</span>
       <span>Weights in the worked examples are random stand-ins for learned values.</span>
     </footer>
@@ -1062,6 +1068,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
     </section>
 
     <footer class="foot">
+      <span><a class="star-link" href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener">★ Star the repo on GitHub</a> · ideas and fixes welcome as <a href="https://github.com/GuptaAditya95/llmbreakdown/issues" target="_blank" rel="noopener">issues</a></span>
       <span><b>Made with Claude.</b> Built with Claude by Anthropic; the vision, structure and ideas are entirely my own.</span>
       <a href="#home">← back to the cover</a>
     </footer>
@@ -1305,6 +1312,7 @@ canvas.pe-canvas{width:100%;height:auto;image-rendering:pixelated;border:1.5px s
     </section>
 
     <footer class="foot">
+      <span><a class="star-link" href="https://github.com/GuptaAditya95/llmbreakdown" target="_blank" rel="noopener">★ Star the repo on GitHub</a> · ideas and fixes welcome as <a href="https://github.com/GuptaAditya95/llmbreakdown/issues" target="_blank" rel="noopener">issues</a></span>
       <span><b>Made with Claude.</b> Built with Claude by Anthropic; the vision, structure and ideas are entirely my own.</span>
       <span><a href="#encoder">← Part 1: the encoder</a> · <a href="#home">back to the cover</a></span>
     </footer>
@@ -3034,4 +3042,11 @@ document.querySelectorAll('[data-nb]').forEach(btn => btn.addEventListener('clic
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }));
+</script>
+<script>
+/* star count on the GitHub buttons; buttons work without it */
+fetch('https://api.github.com/repos/GuptaAditya95/llmbreakdown').then(r => r.ok ? r.json() : null).then(d => {
+  if (!d || typeof d.stargazers_count !== 'number') return;
+  document.querySelectorAll('[data-stars]').forEach(el => { el.textContent = d.stargazers_count.toLocaleString(); el.hidden = false; });
+}).catch(() => {});
 </script>

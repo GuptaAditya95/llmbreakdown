@@ -202,16 +202,22 @@ is worth adding to any generative architecture; Attention's Part 3 is the templa
 2. `h1`: "<Thing>, *by hand*" with the hand-drawn red SVG underline under "by hand".
 3. Lede: which paper, who wrote it, and the promise: type an input, watch every number computed with the
    shapes beside it, then do the sums yourself.
-4. Parts cards ("Part 1 · The encoder", "Enter →").
-5. The figure: the paper's main architecture figure **redrawn by hand** as inline SVG (Caveat labels,
+4. Star row, right above the parts cards: `<div class="star-row">` with the `btn small` "★ Star on GitHub"
+   button (links to the repo, opens in a new tab, has a `<span class="star-count" data-stars hidden>`) and the
+   note "Found it useful? A star helps other learners find it." Copy the `.star-row` / `.star-ic` /
+   `.star-count` CSS and the small star-count `<script>` at the end of the file; the script fills
+   every `[data-stars]` from the GitHub API and fails silently, so the button works without it.
+5. Parts cards ("Part 1 · The encoder", "Enter →").
+6. The figure: the paper's main architecture figure **redrawn by hand** as inline SVG (Caveat labels,
    `.box` and `.wire` classes, draw-on animation). Each half is a link into its part, with a red hand
    annotation ("click the encoder ↓"). Caption: "Redrawn by hand from Figure N of ...".
-6. "Who this is for" (with the red margin line) beside "How the notebook works" (Read, Watch, Do the
+7. "Who this is for" (with the red margin line) beside "How the notebook works" (Read, Watch, Do the
    homework, Track the shapes).
-7. Three notes: a yellow sticky "Is this how ChatGPT works?" style note that connects the architecture to
+8. Three notes: a yellow sticky "Is this how ChatGPT works?" style note that connects the architecture to
    what readers use today; "Cite the paper" with APA 7 / IEEE / BibTeX tabs and a copy button; "Thank you"
    for the resources that shaped your understanding.
-8. Footer: "Made with Claude. This site was built with Claude by Anthropic. The vision, structure and
+9. Footer: a first line "★ Star the repo on GitHub · ideas and fixes welcome as issues"
+   (repo and `/issues` links), then "Made with Claude. This site was built with Claude by Anthropic. The vision, structure and
    ideas are entirely my own." and "Weights in the worked examples are random stand-ins for learned
    values."
 
@@ -469,7 +475,8 @@ The hub was meant to live at `letsbreakitdown.github.io`. That address needs a G
    this repo's contents to it.
 3. In the new repo's Settings → Pages, deploy from `main`, `/ (root)`.
 4. Install the Claude GitHub App on the organisation so Claude can push there.
-5. Update the absolute URLs: the README "Live site" line and table links, and the hub footer's star link.
+5. Update the absolute URLs: the README "Live site" line and table links, the hub's star button and footer star link, and the star button, footer links and
+   star-count API URL on every breakdown page.
 
 Then the hub is at `https://letsbreakitdown.github.io/` and each breakdown at
 `https://letsbreakitdown.github.io/<slug>/`. GitHub redirects the old repo URL after a transfer, but the
@@ -493,6 +500,7 @@ shared it. (If you keep the repo name `llmbreakdown` inside the org, the address
 - [ ] The worksheet generates, prints only the worksheet, and its answer key matches.
 - [ ] Section references (§) match the arXiv version; the citation tabs are correct for the new paper.
 - [ ] The cover kicker links to `../`; the hub card links to `<slug>/`; README row added.
+- [ ] The star button sits above the parts cards and every part's footer has the star and issues line.
 - [ ] Credits in "Thank you", the "Made with Claude" footer and the stand-in-weights note are present.
 - [ ] No console errors in the browser.
 
